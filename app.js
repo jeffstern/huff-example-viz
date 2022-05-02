@@ -15,6 +15,8 @@ let destinations;
 let originLayer;
 let destinationLayer;
 
+let showNondominantParks = true;
+
 let uniqueName;
 let attractivenessProperties;
 
@@ -39,6 +41,14 @@ function getColoredIcon(color) {
   return L.divIcon({
     html: `<i class="fas ${faIcon} fa-3x" style="color:${color}"></i>`,
     iconSize: [20, 20],
+    className: 'icon-marker',
+  });
+}
+
+function getSmallDot() {
+  return L.divIcon({
+    html: '<i class="fas fa-circle fa-1x" style="color:#AAA"></i>',
+    iconSize: [10, 10],
     className: 'icon-marker',
   });
 }
@@ -93,7 +103,8 @@ function displayHuffOnMap(map, originProbabilities, nameProperty) {
   }).addTo(map);
 
   let destinationsToShowCenters = [];
-  turf.featureEach(turf.featureCollection(destinationsToShow), (c, i) => {
+  turf.featureEach(destinations, (c, i) => {
+    //  turf.featureEach(turf.featureCollection(destinationsToShow), (c, i) => {
     let feature = turf.center(c);
     feature.properties = c.properties;
     destinationsToShowCenters.push(feature);
@@ -101,7 +112,7 @@ function displayHuffOnMap(map, originProbabilities, nameProperty) {
 
   let destinationsToShowFC = turf.featureCollection(destinationsToShowCenters);
   // destinationsToShowFC = Huff.setDestinationColors(destinationsToShowFC);
-
+  console.log(uniqueDestinationNames);
   destinationLayer = L.geoJSON(destinationsToShowFC, {
     onEachFeature(f, l) {
       let attractivenessString = '';
@@ -112,7 +123,13 @@ function displayHuffOnMap(map, originProbabilities, nameProperty) {
       l.bindPopup(`<b style="color:${f.properties.color}">${f.properties[uniqueName]}</b><br /> ${attractivenessString}`);
     },
     pointToLayer(point, latlng) {
-      return L.marker(latlng, { icon: getColoredIcon(point.properties.color) });
+      if (uniqueDestinationNames.includes(point.properties.PUBLIC_NAME)) {
+        return L.marker(latlng, { icon: getColoredIcon(point.properties.color) });
+      }
+      if (showNondominantParks) {
+        return L.marker(latlng, { icon: getSmallDot() });
+      }
+      return null;
     },
   }).addTo(map);
 }
